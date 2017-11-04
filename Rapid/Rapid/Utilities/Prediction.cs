@@ -19,20 +19,25 @@
             throw new NotImplementedException();
         }
 
-        public PredictionOutput GetIdlePrediction(PredictionInput input)
+        public PredictionOutput GetIdlePrediction(PredictionInput input, bool checkCollision)
         {
+            var result = new PredictionOutput
+                             {
+                                 Input = input,
+                                 UnitPosition = input.Unit.ServerPosition,
+                                 CastPosition = input.Unit.ServerPosition,
+                                 HitChance = HitChance.High
+                             };
+
+            if (!checkCollision || !input.Collision) return result;
+
             var collisionObjects = Collision.GetCollision(new List<Vector3> { input.Unit.ServerPosition }, input);
 
-            return new PredictionOutput
-                       {
-                           Input = input,
-                           UnitPosition = input.Unit.ServerPosition,
-                           CastPosition = input.Unit.ServerPosition,
-                           CollisionObjects = collisionObjects,
-                           HitChance = collisionObjects.Count > 0
-                                           ? HitChance.Collision
-                                           : HitChance.High
-                       };
+            result.CollisionObjects = collisionObjects;
+
+            if (collisionObjects.Count > 0) result.HitChance = HitChance.Collision;
+
+            return result;
         }
 
         public PredictionOutput GetImmobilePrediction(PredictionInput input)
@@ -40,7 +45,7 @@
             throw new NotImplementedException();
         }
 
-        public PredictionOutput GetMovementPrediction(PredictionInput input)
+        public PredictionOutput GetMovementPrediction(PredictionInput input, bool checkCollision)
         {
             var castPosition = Vector3.Zero;
             var unitPosition = Vector3.Zero;
@@ -73,7 +78,18 @@
                 var centerPosition = (unitPosition + predictedPosition) * 0.5f;
                 var centerPositionDistance = input.From.Distance(centerPosition);
 
-                var castPositionImpactTime = centerPositionDistance / input.Speed;
+                var a = Vector3.Dot(velocity, velocity) - (Math.Abs(input.Speed - float.MaxValue) <= 0
+                                                               ? float.MaxValue
+                                                               : (float)Math.Pow(input.Speed, 2));
+
+                var b = 2 * centerPositionDistance * input.Unit.MoveSpeed * cosTheta;
+                var c = (float)Math.Pow(centerPositionDistance, 2);
+
+                var discriminant = b * b - 4f * a * c;
+
+                if (discriminant < 0) return new PredictionOutput { HitChance = HitChance.OutOfRange };
+
+                var castPositionImpactTime = 2f * c / ((float)Math.Sqrt(discriminant) - b);
 
                 if (remainingPath / input.Unit.MoveSpeed < castPositionImpactTime) continue;
 
@@ -83,32 +99,39 @@
                     return new PredictionOutput { HitChance = HitChance.OutOfRange };
             }
 
+            var result = new PredictionOutput
+                             {
+                                 Input = input,
+                                 UnitPosition = unitPosition,
+                                 CastPosition = castPosition,
+                                 HitChance = HitChance.VeryHigh
+                             };
+
+            if (!checkCollision || !input.Collision) return result;
+
             var collisionObjects = Collision.GetCollision(
                 new List<Vector3> { input.Unit.ServerPosition, unitPosition, castPosition },
                 input);
 
-            return new PredictionOutput
-                       {
-                           Input = input,
-                           UnitPosition = unitPosition,
-                           CastPosition = castPosition,
-                           CollisionObjects = collisionObjects,
-                           HitChance = collisionObjects.Count > 0
-                                           ? HitChance.Collision
-                                           : HitChance.VeryHigh
-                       };
+            if (collisionObjects.Count > 0) result.HitChance = HitChance.Collision;
+
+            return result;
         }
 
         public PredictionOutput GetPrediction(PredictionInput input)
         {
             if (!input.Unit.IsValidTarget()) return null;
 
-            return input.Unit.IsMoving ? this.GetMovementPrediction(input) : this.GetIdlePrediction(input);
+            return input.Unit.IsMoving ? this.GetMovementPrediction(input, true) : this.GetIdlePrediction(input, true);
         }
 
         public PredictionOutput GetPrediction(PredictionInput input, bool ft, bool collision)
         {
-            return this.GetPrediction(input);
+            if (!input.Unit.IsValidTarget()) return null;
+
+            return input.Unit.IsMoving
+                       ? this.GetMovementPrediction(input, collision)
+                       : this.GetIdlePrediction(input, collision);
         }
     }
 }

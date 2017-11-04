@@ -6,9 +6,9 @@
     {
         PredictionOutput GetDashPrediction(PredictionInput input);
 
-        PredictionOutput GetIdlePrediction(PredictionInput input);
+        PredictionOutput GetIdlePrediction(PredictionInput input, bool checkCollision);
 
-        PredictionOutput GetMovementPrediction(PredictionInput input);
+        PredictionOutput GetMovementPrediction(PredictionInput input, bool checkCollision);
 
         PredictionOutput GetImmobilePrediction(PredictionInput input);
     }
