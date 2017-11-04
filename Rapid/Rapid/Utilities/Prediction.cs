@@ -61,22 +61,22 @@
 
                 unitPosition = input.Unit.ServerPosition + velocity * delays;
 
+                var unitDistance = input.From.Distance(unitPosition);
+                var unitPositionImpactTime = unitDistance / input.Speed;
+                unitPosition = input.Unit.ServerPosition + velocity * unitPositionImpactTime;
+
                 var toUnit = (unitPosition - input.From).Normalized();
                 var cosTheta = Vector3.Dot(direction, toUnit);
                 var castDirection = (direction + toUnit) * cosTheta;
-                predictedPosition = unitPosition - castDirection * (input.Unit.BoundingRadius + input.Radius * 0.5f);
+                predictedPosition = unitPosition - castDirection * (input.Unit.BoundingRadius + input.Radius);
 
                 var centerPosition = (unitPosition + predictedPosition) * 0.5f;
-                var unitDistance = input.From.Distance(centerPosition);
+                var centerPositionDistance = input.From.Distance(centerPosition);
 
-                var unitPositionImpactTime = input.From.Distance(unitPosition) / input.Speed;
-                var castPositionImpactTime = unitDistance / input.Speed;
-
-                if (castPositionImpactTime < 0) return new PredictionOutput { HitChance = HitChance.None };
+                var castPositionImpactTime = centerPositionDistance / input.Speed;
 
                 if (remainingPath / input.Unit.MoveSpeed < castPositionImpactTime) continue;
 
-                unitPosition = input.Unit.ServerPosition + velocity * unitPositionImpactTime;
                 castPosition = input.Unit.ServerPosition + velocity * castPositionImpactTime;
 
                 if (input.From.Distance(castPosition) + input.Delay * input.Unit.MoveSpeed > input.Range)
