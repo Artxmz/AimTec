@@ -67,7 +67,7 @@
 
                 var toUnit = (unitPosition - input.From).Normalized();
                 var cosTheta = Vector3.Dot(direction, toUnit);
-                var castDirection = (direction + toUnit) * cosTheta;
+                var castDirection = 2 * (direction + toUnit) * cosTheta;
                 predictedPosition = unitPosition - castDirection * (input.Unit.BoundingRadius + input.Radius);
 
                 var centerPosition = (unitPosition + predictedPosition) * 0.5f;
