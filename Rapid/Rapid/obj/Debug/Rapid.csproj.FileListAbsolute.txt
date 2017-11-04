@@ -1,0 +1,7 @@
+C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\bin\Debug\Rapid.exe.config
+C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\bin\Debug\Rapid.exe
+C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\bin\Debug\Rapid.pdb
+C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\obj\Debug\Rapid.csprojResolveAssemblyReference.cache
+C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\obj\Debug\Rapid.csproj.CoreCompileInputs.cache
+C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\obj\Debug\Rapid.exe
+C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\obj\Debug\Rapid.pdb
