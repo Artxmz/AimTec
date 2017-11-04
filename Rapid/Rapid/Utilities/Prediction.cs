@@ -53,6 +53,8 @@
 
             var paths = input.Unit.Path;
 
+            if (input.AoE) input.Radius /= 2f;
+
             for (var i = 0; i < paths.Length - 1; i++)
             {
                 var previousPath = paths[i];
@@ -72,10 +74,16 @@
 
                 var toUnit = (unitPosition - input.From).Normalized();
                 var cosTheta = Vector3.Dot(direction, toUnit);
-                var castDirection = 2 * (direction + toUnit) * cosTheta;
+                var castDirection = (direction + toUnit) * cosTheta;
                 predictedPosition = unitPosition - castDirection * (input.Unit.BoundingRadius + input.Radius);
 
                 var centerPosition = (unitPosition + predictedPosition) * 0.5f;
+
+                if (input.From.Distance(centerPosition) > input.Range)
+                    return new PredictionOutput { HitChance = HitChance.OutOfRange };
+
+                var toCenterPosition = (centerPosition - input.From).Normalized();
+                cosTheta = Vector3.Dot(direction, toCenterPosition);
                 var centerPositionDistance = input.From.Distance(centerPosition);
 
                 var a = Vector3.Dot(velocity, velocity) - (Math.Abs(input.Speed - float.MaxValue) <= 0
