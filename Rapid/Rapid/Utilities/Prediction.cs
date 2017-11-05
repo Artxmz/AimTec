@@ -47,9 +47,9 @@
 
         public PredictionOutput GetMovementPrediction(PredictionInput input, bool checkCollision)
         {
-            var castPosition = Vector3.Zero;
-            var unitPosition = Vector3.Zero;
             var predictedPosition = Vector3.Zero;
+
+            var result = new PredictionOutput { Input = input, HitChance = HitChance.VeryHigh };
 
             var paths = input.Unit.Path;
 
@@ -66,59 +66,46 @@
 
                 var delays = Game.Ping / 1000f + input.Delay;
 
-                unitPosition = input.Unit.ServerPosition + velocity * delays;
+                predictedPosition = input.Unit.ServerPosition + velocity * delays;
 
-                var unitDistance = input.From.Distance(unitPosition);
-                var unitPositionImpactTime = unitDistance / input.Speed;
-                unitPosition = input.Unit.ServerPosition + velocity * unitPositionImpactTime;
+                var unitPositionImpactTime = input.From.Distance(predictedPosition) / input.Speed;
+                result.UnitPosition = input.Unit.ServerPosition + velocity * unitPositionImpactTime;
 
-                var toUnit = (unitPosition - input.From).Normalized();
+                if (input.From.Distance(result.UnitPosition) > input.Range) result.HitChance = HitChance.OutOfRange;
+
+                var toUnit = (result.UnitPosition - input.From).Normalized();
                 var cosTheta = Vector3.Dot(direction, toUnit);
+
                 var castDirection = (direction + toUnit) * cosTheta;
-                predictedPosition = unitPosition - castDirection * (input.Unit.BoundingRadius + input.Radius);
+                predictedPosition = result.UnitPosition - castDirection * (input.Unit.BoundingRadius + input.Radius);
 
-                var centerPosition = (unitPosition + predictedPosition) * 0.5f;
-
-                if (input.From.Distance(centerPosition) > input.Range)
-                    return new PredictionOutput { HitChance = HitChance.OutOfRange };
-
-                var toCenterPosition = (centerPosition - input.From).Normalized();
-                cosTheta = Vector3.Dot(direction, toCenterPosition);
-                var centerPositionDistance = input.From.Distance(centerPosition);
+                var predictedPositionDistance = input.From.Distance(predictedPosition);
 
                 var a = Vector3.Dot(velocity, velocity) - (Math.Abs(input.Speed - float.MaxValue) <= 0
                                                                ? float.MaxValue
                                                                : (float)Math.Pow(input.Speed, 2));
 
-                var b = 2 * centerPositionDistance * input.Unit.MoveSpeed * cosTheta;
-                var c = (float)Math.Pow(centerPositionDistance, 2);
+                var b = 2 * predictedPositionDistance * input.Unit.MoveSpeed * cosTheta;
+                var c = (float)Math.Pow(predictedPositionDistance, 2);
 
                 var discriminant = b * b - 4f * a * c;
 
-                if (discriminant < 0) return new PredictionOutput { HitChance = HitChance.OutOfRange };
+                if (discriminant < 0) result.HitChance = HitChance.OutOfRange;
 
-                var castPositionImpactTime = 2f * c / ((float)Math.Sqrt(discriminant) - b);
+                var impactTime = 2f * c / ((float)Math.Sqrt(discriminant) - b);
 
-                if (remainingPath / input.Unit.MoveSpeed < castPositionImpactTime) continue;
+                if (remainingPath / input.Unit.MoveSpeed < impactTime) continue;
 
-                castPosition = input.Unit.ServerPosition + velocity * castPositionImpactTime;
+                result.CastPosition = input.Unit.ServerPosition + velocity * impactTime;
 
-                if (input.From.Distance(castPosition) + input.Delay * input.Unit.MoveSpeed > input.Range)
-                    return new PredictionOutput { HitChance = HitChance.OutOfRange };
+                if (input.From.Distance(result.CastPosition) + input.Delay * input.Unit.MoveSpeed > input.Range)
+                    result.HitChance = HitChance.OutOfRange;
             }
-
-            var result = new PredictionOutput
-                             {
-                                 Input = input,
-                                 UnitPosition = unitPosition,
-                                 CastPosition = castPosition,
-                                 HitChance = HitChance.VeryHigh
-                             };
 
             if (!checkCollision || !input.Collision) return result;
 
             var collisionObjects = Collision.GetCollision(
-                new List<Vector3> { input.Unit.ServerPosition, unitPosition, castPosition },
+                new List<Vector3> { input.Unit.ServerPosition, result.UnitPosition, result.CastPosition },
                 input);
 
             if (collisionObjects.Count > 0) result.HitChance = HitChance.Collision;

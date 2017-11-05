@@ -8,3 +8,15 @@ C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\bin\x86\Release\
 C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\obj\x86\Release\Rapid.csproj.CoreCompileInputs.cache
 C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\obj\x86\Release\Rapid.exe
 C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\obj\x86\Release\Rapid.pdb
+C:\Users\Eren\Documents\Visual Studio 2017\Projects\Rapid\Rapid\obj\x86\Release\Rapid.csprojResolveAssemblyReference.cache
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\bin\x86\Release\Rapid.exe.config
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\bin\x86\Release\Rapid.exe
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\bin\x86\Release\Rapid.pdb
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\bin\x86\Release\Aimtec.dll
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\bin\x86\Release\Aimtec.SDK.dll
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\bin\x86\Release\Newtonsoft.Json.dll
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\bin\x86\Release\NLog.dll
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\obj\x86\Release\Rapid.csproj.CoreCompileInputs.cache
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\obj\x86\Release\Rapid.exe
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\obj\x86\Release\Rapid.pdb
+C:\Users\Eren\Desktop\Aimtec\Rapid\Rapid\obj\x86\Release\Rapid.csprojResolveAssemblyReference.cache
