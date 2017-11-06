@@ -12,8 +12,6 @@
 
     internal class Prediction : ISkillshotPrediction, IPrediction
     {
-        private static Obj_AI_Hero Player => ObjectManager.GetLocalPlayer();
-
         public PredictionOutput GetDashPrediction(PredictionInput input)
         {
             throw new NotImplementedException();
@@ -59,7 +57,9 @@
             {
                 var previousPath = paths[i];
                 var currentPath = paths[i + 1];
+                var passedPath = previousPath.Distance(input.Unit.ServerPosition);
                 var remainingPath = input.Unit.ServerPosition.Distance(currentPath);
+                var pathRatio = passedPath / remainingPath;
 
                 var direction = (currentPath - previousPath).Normalized();
                 var velocity = direction * input.Unit.MoveSpeed;
@@ -76,8 +76,10 @@
                 var toUnit = (result.UnitPosition - input.From).Normalized();
                 var cosTheta = Vector3.Dot(direction, toUnit);
 
-                var castDirection = (direction + toUnit) * cosTheta;
-                predictedPosition = result.UnitPosition - castDirection * (input.Unit.BoundingRadius + input.Radius);
+                var castDirection = direction + toUnit;
+                predictedPosition = predictedPosition - castDirection * (input.Unit.BoundingRadius + input.Radius);
+                castDirection *= cosTheta;
+                predictedPosition = predictedPosition + castDirection * (pathRatio * input.Radius);
 
                 var predictedPositionDistance = input.From.Distance(predictedPosition);
 
