@@ -51,7 +51,7 @@
 
             var paths = input.Unit.Path;
 
-            if (input.AoE) input.Radius /= 2f;
+            if (input.AoE || input.Type == SkillshotType.Circle) input.Radius /= 2f;
 
             for (var i = 0; i < paths.Length - 1; i++)
             {
@@ -62,33 +62,39 @@
                 var pathRatio = passedPath / remainingPath;
 
                 var direction = (currentPath - previousPath).Normalized();
-                var velocity = direction * input.Unit.MoveSpeed;
 
                 var delays = Game.Ping / 1000f + input.Delay;
 
-                predictedPosition = input.Unit.ServerPosition + velocity * delays;
+                predictedPosition = input.Unit.ServerPosition + direction * (delays * input.Unit.MoveSpeed);
 
                 var unitPositionImpactTime = input.From.Distance(predictedPosition) / input.Speed;
-                result.UnitPosition = input.Unit.ServerPosition + velocity * unitPositionImpactTime;
+                result.UnitPosition = input.Unit.ServerPosition
+                                      + direction * (unitPositionImpactTime * input.Unit.MoveSpeed);
 
-                if (input.From.Distance(result.UnitPosition) > input.Range) result.HitChance = HitChance.OutOfRange;
+                if (input.From.Distance(result.UnitPosition) + input.Delay * input.Unit.MoveSpeed > input.Range)
+                    result.HitChance = HitChance.OutOfRange;
 
                 var toUnit = (result.UnitPosition - input.From).Normalized();
-                var cosTheta = Vector3.Dot(direction, toUnit);
 
-                var castDirection = direction + toUnit;
-                predictedPosition = predictedPosition - castDirection * (input.Unit.BoundingRadius + input.Radius);
-                castDirection *= cosTheta;
-                predictedPosition = predictedPosition + castDirection * (pathRatio * input.Radius);
+                var castDirection = (direction + toUnit) / 2f;
+                predictedPosition = result.UnitPosition - castDirection * (input.Unit.BoundingRadius + input.Radius);
+                castDirection *= pathRatio;
+                predictedPosition = predictedPosition + castDirection * input.Radius;
 
-                var predictedPositionDistance = input.From.Distance(predictedPosition);
+                if (input.From.Distance(predictedPosition) > input.Range) result.HitChance = HitChance.OutOfRange;
 
-                var a = Vector3.Dot(velocity, velocity) - (Math.Abs(input.Speed - float.MaxValue) <= 0
-                                                               ? float.MaxValue
-                                                               : (float)Math.Pow(input.Speed, 2));
+                var toPredictionPosition = (predictedPosition - input.From).Normalized();
 
-                var b = 2 * predictedPositionDistance * input.Unit.MoveSpeed * cosTheta;
-                var c = (float)Math.Pow(predictedPositionDistance, 2);
+                var cosTheta = Vector3.Dot(toUnit, toPredictionPosition);
+                var distance = input.From.Distance(predictedPosition);
+
+                var a = Vector3.Dot(direction, direction)
+                        - (Math.Abs(input.Speed - float.MaxValue) <= 0
+                               ? float.MaxValue
+                               : (float)Math.Pow(input.Speed, 2));
+
+                var b = 2 * distance * input.Unit.MoveSpeed * cosTheta;
+                var c = (float)Math.Pow(distance, 2);
 
                 var discriminant = b * b - 4f * a * c;
 
@@ -98,10 +104,7 @@
 
                 if (remainingPath / input.Unit.MoveSpeed < impactTime) continue;
 
-                result.CastPosition = input.Unit.ServerPosition + velocity * impactTime;
-
-                if (input.From.Distance(result.CastPosition) + input.Delay * input.Unit.MoveSpeed > input.Range)
-                    result.HitChance = HitChance.OutOfRange;
+                result.CastPosition = input.Unit.ServerPosition + direction * (impactTime * input.Unit.MoveSpeed);
             }
 
             if (!checkCollision || !input.Collision) return result;
@@ -117,14 +120,12 @@
 
         public PredictionOutput GetPrediction(PredictionInput input)
         {
-            if (!input.Unit.IsValidTarget()) return null;
-
-            return input.Unit.IsMoving ? this.GetMovementPrediction(input, true) : this.GetIdlePrediction(input, true);
+            return this.GetPrediction(input, false, true);
         }
 
         public PredictionOutput GetPrediction(PredictionInput input, bool ft, bool collision)
         {
-            if (!input.Unit.IsValidTarget()) return null;
+            if (!input.Unit.IsValidTarget() || !input.Unit.IsValid) return new PredictionOutput { Input = input };
 
             return input.Unit.IsMoving
                        ? this.GetMovementPrediction(input, collision)
